@@ -1,9 +1,4 @@
-# ==============================================================================
-# models.py - Database Models for Diagnostic Sessions and Results
-# ==============================================================================
-
 from django.db import models
-from django.contrib.auth.models import AbstractUser
 import uuid
 
 
@@ -13,37 +8,11 @@ import uuid
 class HealthFacility(models.Model):
     name = models.CharField(max_length=200)
     location = models.CharField(max_length=200)
-    facility_type = models.CharField(
-        max_length=50,
-        choices=[
-            ("hospital", "Hospital"),
-            ("clinic", "Clinic"),
-            ("laboratory", "Laboratory"),
-        ],
-    )
+    facility_type = models.CharField(max_length=50)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.name
-
-
-# ------------------------
-# Custom User Model
-# ------------------------
-class CustomUser(AbstractUser):
-    USER_TYPES = [
-        ("technician", "Lab Technician"),
-        ("doctor", "Doctor"),
-        ("admin", "Administrator"),
-    ]
-    user_type = models.CharField(max_length=20, choices=USER_TYPES)
-    facility = models.ForeignKey(
-        HealthFacility,
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True,
-        related_name="users",
-    )
 
 
 # ------------------------
@@ -83,9 +52,7 @@ class DiagnosticSession(models.Model):
     patient = models.ForeignKey(
         Patient, on_delete=models.CASCADE, related_name="sessions"
     )
-    technician = models.ForeignKey(
-        CustomUser, on_delete=models.CASCADE, related_name="sessions"
-    )
+    technician_name = models.CharField(max_length=255, blank=True, null=True)
     disease_type = models.CharField(max_length=50, choices=DISEASE_TYPES)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
     created_at = models.DateTimeField(auto_now_add=True)
@@ -102,13 +69,7 @@ class MicroscopyImage(models.Model):
     )
     image = models.ImageField(upload_to="microscopy_images/")
     image_metadata = models.JSONField(default=dict)
-    uploaded_by = models.ForeignKey(
-        CustomUser,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="uploaded_images",
-    )
+    uploaded_by_name = models.CharField(max_length=255, blank=True, null=True)
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
 
@@ -163,9 +124,7 @@ class AIAnalysisResult(models.Model):
 # ------------------------
 class ExpertReview(models.Model):
     analysis = models.OneToOneField(AIAnalysisResult, on_delete=models.CASCADE)
-    reviewer = models.ForeignKey(
-        CustomUser, on_delete=models.CASCADE, related_name="expert_reviews"
-    )
+    reviewer_name = models.CharField(max_length=255, blank=True, null=True)
     expert_diagnosis = models.TextField()
     agrees_with_ai = models.BooleanField()
     notes = models.TextField(blank=True)

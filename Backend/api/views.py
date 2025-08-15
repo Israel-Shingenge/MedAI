@@ -1,5 +1,5 @@
 # ==============================================================================
-# views.py - Fixed Views with Proper Class Structure
+# views.py - Fixed Views with No Authentication Requirement
 # ==============================================================================
 
 from rest_framework import viewsets, status
@@ -7,7 +7,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from django.db import transaction
-from .tasks import process_microscopy_image_micronet  # Celery task
+from .tasks import process_microscopy_image_micronet
 from .models import DiagnosticSession, MicroscopyImage, Patient
 from .serializers import (
     DiagnosticSessionSerializer,
@@ -28,8 +28,8 @@ class DiagnosticSessionViewSet(viewsets.ModelViewSet):
     serializer_class = DiagnosticSessionSerializer
 
     def perform_create(self, serializer):
-        """Automatically set the technician to the logged-in user."""
-        serializer.save(technician=self.request.user)
+        """Automatically save without needing a logged-in user."""
+        serializer.save()  # Removed technician=self.request.user
 
     @transaction.atomic
     @action(detail=True, methods=["post"])
@@ -42,19 +42,17 @@ class DiagnosticSessionViewSet(viewsets.ModelViewSet):
                 {"error": "No image provided"}, status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Create image record
+        # Create image record without requiring a user
         image = MicroscopyImage.objects.create(
             session=session,
             image=request.FILES["image"],
             image_metadata=request.data.get("metadata", {}),
-            uploaded_by=request.user,
+            uploaded_by=None,  # No authentication needed
         )
 
-        # Trigger AI analysis asynchronously with MicroNet
         task_type = request.data.get("task_type", "classification")
         process_microscopy_image_micronet.delay(str(image.id), task_type)
 
-        # Update session status
         session.status = "processing"
         session.save(update_fields=["status"])
 
