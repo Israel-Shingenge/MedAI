@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 @api_view(["POST"])
-@permission_classes([IsAuthenticated])
+@permission_classes([])
 def mobile_upload_image_micronet(request):
     """Upload microscopy image and trigger MicroNet AI processing."""
     try:

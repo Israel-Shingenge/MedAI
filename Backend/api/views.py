@@ -44,11 +44,11 @@ class DiagnosticSessionViewSet(viewsets.ModelViewSet):
 
         # Create image record
         image = MicroscopyImage.objects.create(
-            session=session,
-            image=request.FILES["image"],
-            image_metadata=request.data.get("metadata", {}),
-            uploaded_by=request.user,
-        )
+        session=session,
+        image=request.FILES["image"],
+        image_metadata=request.data.get("metadata", {}),
+        uploaded_by=request.user if request.user.is_authenticated else None,
+    )
 
         # Trigger AI analysis asynchronously with MicroNet
         task_type = request.data.get("task_type", "classification")

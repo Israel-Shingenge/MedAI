@@ -115,7 +115,7 @@ style.textContent = `
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0.75rem 0;
+    padding: 0.1rem 0;
   }
 
   .logo-section {
@@ -211,7 +211,7 @@ style.textContent = `
   }
 
   .main-content {
-    margin-top: 60px;
+    margin-top: 30px;
     min-height: calc(100vh - 60px);
   }
 
